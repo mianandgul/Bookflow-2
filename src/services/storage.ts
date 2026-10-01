@@ -10,15 +10,33 @@ import {
   User 
 } from '../types';
 
+import heroImage from '../assets/images/booking_platform_hero_1790610722458.jpg';
+import fitnessImage from '../assets/images/service_fitness_coach_1790610738386.jpg';
+import barberImage from '../assets/images/service_barber_salon_1790610749677.jpg';
+import dentalImage from '../assets/images/service_dental_clinic_1790610765963.jpg';
+import tutorImage from '../assets/images/service_tutor_education_1790692253523.jpg';
+import legalImage from '../assets/images/service_legal_office_1790692264349.jpg';
+
 // Asset references
 export const ASSETS = {
-  hero: '/src/assets/images/booking_platform_hero_1790610722458.jpg',
-  fitness: '/src/assets/images/service_fitness_coach_1790610738386.jpg',
-  barber: '/src/assets/images/service_barber_salon_1790610749677.jpg',
-  dental: '/src/assets/images/service_dental_clinic_1790610765963.jpg',
-  tutor: '/src/assets/images/service_tutor_education_1790692253523.jpg',
-  legal: '/src/assets/images/service_legal_office_1790692264349.jpg',
+  hero: heroImage,
+  fitness: fitnessImage,
+  barber: barberImage,
+  dental: dentalImage,
+  tutor: tutorImage,
+  legal: legalImage,
 };
+
+export function resolveAssetUrl(url?: string): string {
+  if (!url) return '';
+  if (url.includes('service_fitness_coach')) return ASSETS.fitness;
+  if (url.includes('service_barber_salon')) return ASSETS.barber;
+  if (url.includes('service_dental_clinic')) return ASSETS.dental;
+  if (url.includes('service_tutor_education')) return ASSETS.tutor;
+  if (url.includes('service_legal_office')) return ASSETS.legal;
+  if (url.includes('booking_platform_hero')) return ASSETS.hero;
+  return url;
+}
 
 const STORAGE_KEYS = {
   BUSINESSES: 'bookflow_businesses_v1',
@@ -540,8 +558,17 @@ export class StorageService {
       this.save(STORAGE_KEYS.BUSINESSES, INITIAL_BUSINESSES);
       return INITIAL_BUSINESSES;
     }
-    // Auto-merge any missing initial businesses
+    // Auto-merge any missing initial businesses and sanitize asset paths
     let updated = false;
+    list = list.map((b) => {
+      const resolvedCover = resolveAssetUrl(b.coverUrl);
+      const resolvedLogo = resolveAssetUrl(b.logoUrl);
+      if (resolvedCover !== b.coverUrl || resolvedLogo !== b.logoUrl) {
+        updated = true;
+        return { ...b, coverUrl: resolvedCover, logoUrl: resolvedLogo };
+      }
+      return b;
+    });
     for (const initBiz of INITIAL_BUSINESSES) {
       if (!list.some((b) => b.id === initBiz.id || b.slug === initBiz.slug)) {
         list.push(initBiz);
@@ -592,8 +619,16 @@ export class StorageService {
       this.save(STORAGE_KEYS.SERVICES, INITIAL_SERVICES);
       all = INITIAL_SERVICES;
     } else {
-      // Auto-merge missing services from INITIAL_SERVICES
       let updated = false;
+      all = all.map((s) => {
+        const resolvedImage = resolveAssetUrl(s.imageUrl);
+        if (resolvedImage !== s.imageUrl) {
+          updated = true;
+          return { ...s, imageUrl: resolvedImage };
+        }
+        return s;
+      });
+      // Auto-merge missing services from INITIAL_SERVICES
       for (const initSrv of INITIAL_SERVICES) {
         if (!all.some((s) => s.id === initSrv.id)) {
           all.push(initSrv);
