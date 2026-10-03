@@ -184,6 +184,60 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
         </div>
       </div>
 
+      {/* Booking Status Breakdown Cards (Total, Pending, Confirmed, Cancelled) */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div 
+          onClick={() => onTabChange('bookings')}
+          className="bg-white p-4 rounded-xl border border-neutral-200 shadow-xs cursor-pointer hover:border-neutral-300 transition-colors"
+        >
+          <div className="text-xs text-neutral-500 font-medium">Total Bookings</div>
+          <div className="text-xl font-bold text-neutral-900 font-mono mt-1">{bookings.length}</div>
+          <div className="text-[10px] text-neutral-400 mt-0.5">All time records</div>
+        </div>
+
+        <div 
+          onClick={() => onTabChange('bookings')}
+          className="bg-white p-4 rounded-xl border border-amber-200 shadow-xs cursor-pointer hover:border-amber-300 transition-colors"
+        >
+          <div className="text-xs text-amber-800 font-medium flex items-center justify-between">
+            <span>Pending</span>
+            <span className="w-2 h-2 rounded-full bg-amber-500"></span>
+          </div>
+          <div className="text-xl font-bold text-amber-900 font-mono mt-1">
+            {bookings.filter((b) => b.status === 'pending').length}
+          </div>
+          <div className="text-[10px] text-amber-700/70 mt-0.5">Awaiting confirmation</div>
+        </div>
+
+        <div 
+          onClick={() => onTabChange('bookings')}
+          className="bg-white p-4 rounded-xl border border-emerald-200 shadow-xs cursor-pointer hover:border-emerald-300 transition-colors"
+        >
+          <div className="text-xs text-emerald-800 font-medium flex items-center justify-between">
+            <span>Confirmed</span>
+            <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+          </div>
+          <div className="text-xl font-bold text-emerald-900 font-mono mt-1">
+            {bookings.filter((b) => b.status === 'confirmed').length}
+          </div>
+          <div className="text-[10px] text-emerald-700/70 mt-0.5">Ready for appointment</div>
+        </div>
+
+        <div 
+          onClick={() => onTabChange('bookings')}
+          className="bg-white p-4 rounded-xl border border-neutral-200 shadow-xs cursor-pointer hover:border-neutral-300 transition-colors"
+        >
+          <div className="text-xs text-neutral-500 font-medium flex items-center justify-between">
+            <span>Cancelled</span>
+            <span className="w-2 h-2 rounded-full bg-neutral-400"></span>
+          </div>
+          <div className="text-xl font-bold text-neutral-700 font-mono mt-1">
+            {bookings.filter((b) => b.status === 'cancelled').length}
+          </div>
+          <div className="text-[10px] text-neutral-400 mt-0.5">Slots released</div>
+        </div>
+      </div>
+
       {/* Recent Bookings Section */}
       <div className="bg-white rounded-2xl border border-neutral-200 shadow-xs overflow-hidden">
         <div className="p-5 border-b border-neutral-200 flex items-center justify-between">

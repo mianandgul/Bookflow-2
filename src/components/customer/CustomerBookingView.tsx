@@ -150,7 +150,7 @@ export const CustomerBookingView: React.FC<CustomerBookingViewProps> = ({
   }
 
   // Handle Booking Submission
-  const handleConfirmBooking = (e: React.FormEvent) => {
+  const handleConfirmBooking = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
 
@@ -181,8 +181,8 @@ export const CustomerBookingView: React.FC<CustomerBookingViewProps> = ({
 
     setIsSubmitting(true);
 
-    setTimeout(() => {
-      const result = StorageService.createBooking({
+    try {
+      const result = await StorageService.createBooking({
         businessId: business.id,
         serviceId: selectedService.id,
         date: selectedDate,
@@ -201,7 +201,10 @@ export const CustomerBookingView: React.FC<CustomerBookingViewProps> = ({
       }
 
       setBookingConfirmed(result.booking);
-    }, 400);
+    } catch (err: any) {
+      setIsSubmitting(false);
+      setErrorMessage(err.message || 'An error occurred while creating your appointment.');
+    }
   };
 
   // WhatsApp Pre-filled message generator

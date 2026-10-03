@@ -7,8 +7,12 @@ import {
   Booking, 
   Customer, 
   BookingStatus,
-  User 
+  User,
+  BlockedTime 
 } from '../types';
+
+import { isSupabaseConfigured } from '../lib/supabase';
+import { SupabaseService } from './supabaseService';
 
 import heroImage from '../assets/images/booking_platform_hero_1790610722458.jpg';
 import fitnessImage from '../assets/images/service_fitness_coach_1790610738386.jpg';
@@ -42,6 +46,7 @@ const STORAGE_KEYS = {
   BUSINESSES: 'bookflow_businesses_v1',
   SERVICES: 'bookflow_services_v1',
   AVAILABILITY: 'bookflow_availability_v1',
+  BLOCKED_TIMES: 'bookflow_blocked_times_v1',
   BOOKINGS: 'bookflow_bookings_v1',
   CURRENT_USER: 'bookflow_user_v1',
   ACTIVE_BUSINESS_ID: 'bookflow_active_business_id_v1',
@@ -532,6 +537,18 @@ export const INITIAL_BOOKINGS: Booking[] = [
   },
 ];
 
+export const INITIAL_BLOCKED_TIMES: BlockedTime[] = [
+  {
+    id: 'blk_1',
+    businessId: 'biz_apex_fitness',
+    date: getDateOffset(4),
+    startTime: '13:00',
+    endTime: '15:00',
+    reason: 'Studio Deep Cleaning & Equipment Calibration',
+    createdAt: new Date().toISOString(),
+  },
+];
+
 export class StorageService {
   private static load<T>(key: string, fallback: T): T {
     try {
@@ -698,6 +715,52 @@ export class StorageService {
     const all = this.load<Record<string, BusinessAvailability>>(STORAGE_KEYS.AVAILABILITY, {});
     all[availability.businessId] = availability;
     this.save(STORAGE_KEYS.AVAILABILITY, all);
+
+    if (isSupabaseConfigured()) {
+      SupabaseService.saveBusinessHours(availability).catch(console.warn);
+    }
+  }
+
+  // Blocked Times Operations
+  static getBlockedTimes(businessId: string): BlockedTime[] {
+    const all = this.load<Record<string, BlockedTime[]>>(STORAGE_KEYS.BLOCKED_TIMES, {});
+    if (!all[businessId]) {
+      const initial = INITIAL_BLOCKED_TIMES.filter((b) => b.businessId === businessId);
+      all[businessId] = initial;
+      this.save(STORAGE_KEYS.BLOCKED_TIMES, all);
+      return initial;
+    }
+    return all[businessId];
+  }
+
+  static addBlockedTime(blocked: Omit<BlockedTime, 'id'>): BlockedTime {
+    const all = this.load<Record<string, BlockedTime[]>>(STORAGE_KEYS.BLOCKED_TIMES, {});
+    const bizList = all[blocked.businessId] || [];
+    const newBlocked: BlockedTime = {
+      ...blocked,
+      id: 'blk_' + Math.random().toString(36).substring(2, 9),
+      createdAt: new Date().toISOString(),
+    };
+    bizList.push(newBlocked);
+    all[blocked.businessId] = bizList;
+    this.save(STORAGE_KEYS.BLOCKED_TIMES, all);
+
+    if (isSupabaseConfigured()) {
+      SupabaseService.addBlockedTime(blocked).catch(console.warn);
+    }
+
+    return newBlocked;
+  }
+
+  static deleteBlockedTime(businessId: string, id: string): void {
+    const all = this.load<Record<string, BlockedTime[]>>(STORAGE_KEYS.BLOCKED_TIMES, {});
+    if (all[businessId]) {
+      all[businessId] = all[businessId].filter((b) => b.id !== id);
+      this.save(STORAGE_KEYS.BLOCKED_TIMES, all);
+    }
+    if (isSupabaseConfigured()) {
+      SupabaseService.deleteBlockedTime(id).catch(console.warn);
+    }
   }
 
   // Bookings Operations
@@ -721,7 +784,7 @@ export class StorageService {
     return businessId ? all.filter((b) => b.businessId === businessId) : all;
   }
 
-  static createBooking(data: {
+  static async createBooking(data: {
     businessId: string;
     serviceId: string;
     date: string;
@@ -730,7 +793,7 @@ export class StorageService {
     customerEmail: string;
     customerPhone: string;
     customerMessage?: string;
-  }): { success: boolean; booking?: Booking; error?: string } {
+  }): Promise<{ success: boolean; booking?: Booking; error?: string }> {
     // Check if slot is still available (Anti-double booking rule)
     const availableSlots = this.getAvailableSlots(data.businessId, data.date, data.serviceId);
     if (!availableSlots.includes(data.timeSlot)) {
@@ -743,11 +806,47 @@ export class StorageService {
       return { success: false, error: 'Business or service not found.' };
     }
 
-    const all = this.getBookings();
     const referenceNumber = Math.floor(1000 + Math.random() * 9000);
+    const bookingRef = `BF-${referenceNumber}`;
+    const startM = timeToMinutes(data.timeSlot);
+    const endM = startM + (service.durationMinutes || 30);
+    const endTime = minutesToTimeSlot(endM);
+
+    // If Supabase is connected, persist to Supabase Postgres as source of truth
+    if (isSupabaseConfigured()) {
+      const cloudResult = await SupabaseService.createBooking({
+        businessId: data.businessId,
+        serviceId: service.id,
+        serviceName: service.name,
+        servicePrice: service.price,
+        serviceDuration: service.durationMinutes,
+        currencySymbol: service.currencySymbol || business.currencySymbol,
+        date: data.date,
+        timeSlot: data.timeSlot,
+        endTime,
+        customerName: data.customerName,
+        customerEmail: data.customerEmail,
+        customerPhone: data.customerPhone,
+        customerMessage: data.customerMessage,
+        bookingReference: bookingRef,
+      });
+
+      if (!cloudResult.success || !cloudResult.booking) {
+        return cloudResult;
+      }
+
+      // Also update local cache
+      const all = this.getBookings();
+      all.unshift(cloudResult.booking);
+      this.save(STORAGE_KEYS.BOOKINGS, all);
+      return { success: true, booking: cloudResult.booking };
+    }
+
+    // Fallback local storage
+    const all = this.getBookings();
     const newBooking: Booking = {
       id: 'bk_' + Math.random().toString(36).substring(2, 9),
-      bookingReference: `BF-${referenceNumber}`,
+      bookingReference: bookingRef,
       businessId: data.businessId,
       serviceId: service.id,
       serviceName: service.name,
@@ -756,6 +855,7 @@ export class StorageService {
       currencySymbol: service.currencySymbol || business.currencySymbol,
       date: data.date,
       timeSlot: data.timeSlot,
+      endTime,
       customerName: data.customerName.trim(),
       customerEmail: data.customerEmail.trim(),
       customerPhone: data.customerPhone.trim(),
@@ -777,6 +877,46 @@ export class StorageService {
       target.status = status;
       target.updatedAt = new Date().toISOString();
       this.save(STORAGE_KEYS.BOOKINGS, all);
+    }
+
+    if (isSupabaseConfigured()) {
+      SupabaseService.updateBookingStatus(bookingId, status).catch(console.warn);
+    }
+  }
+
+  // Cloud Helpers
+  static isCloudConnected(): boolean {
+    return isSupabaseConfigured();
+  }
+
+  static async syncWithSupabase(): Promise<boolean> {
+    if (!isSupabaseConfigured()) return false;
+    try {
+      const cloudBusinesses = await SupabaseService.getBusinesses();
+      if (cloudBusinesses && cloudBusinesses.length > 0) {
+        this.save(STORAGE_KEYS.BUSINESSES, cloudBusinesses);
+      }
+      return true;
+    } catch (e) {
+      console.warn('Sync with Supabase failed:', e);
+      return false;
+    }
+  }
+
+  static async migrateLocalDataToSupabase(): Promise<{ success: boolean; message: string }> {
+    if (!isSupabaseConfigured()) {
+      return { success: false, message: 'Supabase credentials are not configured yet.' };
+    }
+    try {
+      const localBiz = this.getBusinesses();
+      let count = 0;
+      for (const b of localBiz) {
+        await SupabaseService.updateBusiness(b);
+        count++;
+      }
+      return { success: true, message: `Successfully synced ${count} businesses and settings to Supabase.` };
+    } catch (err: any) {
+      return { success: false, message: err.message || 'Migration failed.' };
     }
   }
 
@@ -857,6 +997,9 @@ export class StorageService {
     );
     const bookedTimeSlots = new Set(existingBookings.map((b) => b.timeSlot));
 
+    // Blocked times for this business and date
+    const blockedTimes = this.getBlockedTimes(businessId).filter((b) => b.date === dateString);
+
     const slots: string[] = [];
 
     // If booking for today, also prevent booking past times
@@ -869,6 +1012,20 @@ export class StorageService {
         if (m < breakEnd && m + interval > breakStart) {
           continue; // during break
         }
+      }
+
+      // Check if overlaps with any blocked time
+      let isBlocked = false;
+      for (const blk of blockedTimes) {
+        const bStart = timeToMinutes(blk.startTime);
+        const bEnd = timeToMinutes(blk.endTime);
+        if (m < bEnd && m + interval > bStart) {
+          isBlocked = true;
+          break;
+        }
+      }
+      if (isBlocked) {
+        continue;
       }
 
       // Check if in the past today

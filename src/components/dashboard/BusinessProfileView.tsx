@@ -262,6 +262,27 @@ export const BusinessProfileView: React.FC<BusinessProfileViewProps> = ({
                 className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-200 font-mono focus:outline-hidden focus:ring-1 focus:ring-neutral-900"
               />
             </div>
+
+            <div className="md:col-span-2">
+              <label className="block font-semibold text-neutral-700 mb-1">
+                Operating Timezone
+              </label>
+              <select
+                value={formData.timezone || 'Asia/Karachi'}
+                onChange={(e) => handleChange('timezone', e.target.value)}
+                className="w-full px-3.5 py-2.5 rounded-xl border border-neutral-200 focus:outline-hidden focus:ring-1 focus:ring-neutral-900 bg-white"
+              >
+                <option value="Asia/Karachi">Asia/Karachi (PKT - Pakistan Standard Time, UTC+5)</option>
+                <option value="Asia/Dubai">Asia/Dubai (GST - Gulf Standard Time, UTC+4)</option>
+                <option value="Asia/Riyadh">Asia/Riyadh (AST - Arabia Standard Time, UTC+3)</option>
+                <option value="Europe/London">Europe/London (GMT/BST - UK Time)</option>
+                <option value="Europe/Berlin">Europe/Berlin (CET/CEST - Central Europe)</option>
+                <option value="America/New_York">America/New_York (EST/EDT - US Eastern)</option>
+                <option value="America/Chicago">America/Chicago (CST/CDT - US Central)</option>
+                <option value="America/Los_Angeles">America/Los_Angeles (PST/PDT - US Pacific)</option>
+                <option value="UTC">UTC (Coordinated Universal Time)</option>
+              </select>
+            </div>
           </div>
         </div>
 

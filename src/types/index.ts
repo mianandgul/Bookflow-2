@@ -22,6 +22,7 @@ export interface Business {
   address: string;
   city: string;
   country: string;
+  timezone?: string;
   currency: string; // e.g. 'PKR', 'USD', 'GBP', 'EUR'
   currencySymbol: string; // e.g. 'Rs.', '$', '£', '€'
   website?: string;
@@ -63,10 +64,21 @@ export interface DayAvailability {
   breakEndTime?: string;   // "14:00"
 }
 
+export interface BlockedTime {
+  id: string;
+  businessId: string;
+  date: string; // "YYYY-MM-DD"
+  startTime: string; // "09:00" or "09:00 AM"
+  endTime: string;   // "17:00" or "05:00 PM"
+  reason?: string;
+  createdAt?: string;
+}
+
 export interface BusinessAvailability {
   businessId: string;
   schedule: Record<DayOfWeek, DayAvailability>;
   slotIntervalMinutes: number;
+  blockedTimes?: BlockedTime[];
 }
 
 export type BookingStatus = 'pending' | 'confirmed' | 'completed' | 'cancelled';
@@ -82,10 +94,12 @@ export interface Booking {
   currencySymbol: string;
   date: string; // "YYYY-MM-DD"
   timeSlot: string; // "10:00 AM"
+  endTime?: string; // "11:00 AM"
   customerName: string;
   customerEmail: string;
   customerPhone: string;
   customerMessage?: string;
+  notes?: string;
   status: BookingStatus;
   createdAt: string;
   updatedAt: string;
@@ -108,7 +122,16 @@ export interface User {
   email: string;
   name: string;
   businessId: string;
-  role: 'owner' | 'staff';
+  role: 'owner' | 'staff' | 'admin';
+}
+
+export interface Profile {
+  id: string;
+  businessId: string;
+  fullName: string;
+  email: string;
+  role: 'owner' | 'staff' | 'admin';
+  createdAt?: string;
 }
 
 export type AppView = 

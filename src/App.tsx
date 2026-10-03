@@ -14,6 +14,8 @@ import {
   BookingStatus 
 } from './types';
 import { StorageService } from './services/storage';
+import { SupabaseService } from './services/supabaseService';
+import { isSupabaseConfigured } from './lib/supabase';
 
 // Common Components
 import { DemoSwitcherBar } from './components/common/DemoSwitcherBar';
@@ -73,6 +75,21 @@ export default function App() {
 
   useEffect(() => {
     loadData();
+
+    if (isSupabaseConfigured()) {
+      SupabaseService.getCurrentUser().then((cloudUser) => {
+        if (cloudUser) {
+          setCurrentUser(cloudUser);
+          StorageService.setCurrentUser(cloudUser);
+          if (cloudUser.businessId) {
+            handleSelectBusiness(cloudUser.businessId);
+          }
+        }
+      });
+      StorageService.syncWithSupabase().then(() => {
+        loadData();
+      });
+    }
 
     // Check URL pathname for deep linking and handle popstate
     const handleUrlChange = () => {
@@ -142,6 +159,11 @@ export default function App() {
         window.history.pushState({ view }, '', '/');
       } catch {}
     } else if (view === 'dashboard') {
+      if (!currentUser) {
+        setAuthMode('login');
+        setAuthModalOpen(true);
+        return;
+      }
       try {
         window.history.pushState({ view }, '', '/dashboard');
       } catch {}
@@ -204,7 +226,10 @@ export default function App() {
     setCurrentView('dashboard');
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    if (isSupabaseConfigured()) {
+      await SupabaseService.signOut();
+    }
     setCurrentUser(null);
     StorageService.setCurrentUser(null);
     setCurrentView('landing');

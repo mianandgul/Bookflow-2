@@ -11,6 +11,7 @@ import {
   Zap
 } from 'lucide-react';
 import { Business, Booking } from '../../types';
+import { StorageService } from '../../services/storage';
 
 interface SettingsViewProps {
   business: Business;
@@ -146,12 +147,54 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
         {/* Data & Backup */}
         <div className="bg-white p-6 rounded-2xl border border-neutral-200 shadow-xs space-y-4">
-          <h2 className="font-bold text-neutral-900 text-sm">Data & Backup</h2>
-          <p className="text-neutral-500 text-xs">
-            Export all client appointment records or restore sample defaults.
-          </p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="font-bold text-neutral-900 text-sm">Supabase Cloud Database & Storage</h2>
+              <p className="text-neutral-500 text-xs mt-0.5">
+                Cloud persistence, multi-tenant isolation with Row Level Security, and automated anti-double booking.
+              </p>
+            </div>
+            {StorageService.isCloudConnected() ? (
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full font-semibold text-[11px]">
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                Connected to Supabase
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-neutral-100 text-neutral-700 border border-neutral-200 rounded-full font-semibold text-[11px]">
+                ⚡ Demo Mode (Local Cache)
+              </span>
+            )}
+          </div>
+
+          <div className="p-3.5 bg-neutral-50 rounded-xl border border-neutral-200 space-y-2 text-neutral-700">
+            <div className="font-semibold text-xs text-neutral-900">Configured Cloud Tables:</div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 font-mono text-[11px] text-neutral-600">
+              <div className="bg-white p-2 rounded border border-neutral-200">✓ public.businesses</div>
+              <div className="bg-white p-2 rounded border border-neutral-200">✓ public.profiles</div>
+              <div className="bg-white p-2 rounded border border-neutral-200">✓ public.services</div>
+              <div className="bg-white p-2 rounded border border-neutral-200">✓ public.business_hours</div>
+              <div className="bg-white p-2 rounded border border-neutral-200">✓ public.blocked_times</div>
+              <div className="bg-white p-2 rounded border border-neutral-200">✓ public.bookings</div>
+            </div>
+          </div>
 
           <div className="flex flex-wrap items-center gap-3 pt-2">
+            <button
+              type="button"
+              onClick={async () => {
+                if (!StorageService.isCloudConnected()) {
+                  alert('To sync with Supabase Cloud, add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to your environment variables (.env / Vercel settings).');
+                  return;
+                }
+                const res = await StorageService.migrateLocalDataToSupabase();
+                alert(res.message);
+              }}
+              className="px-4 py-2.5 rounded-xl bg-neutral-950 hover:bg-neutral-800 text-white font-semibold flex items-center gap-2 transition-colors shadow-xs"
+            >
+              <RefreshCw className="w-3.5 h-3.5" />
+              <span>Sync Local Data to Supabase</span>
+            </button>
+
             <button
               type="button"
               onClick={handleExportData}
