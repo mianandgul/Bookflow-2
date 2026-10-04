@@ -22,7 +22,7 @@ import {
   Briefcase
 } from 'lucide-react';
 import { AppView, Business } from '../../types';
-import { ASSETS } from '../../services/storage';
+import { ASSETS, ASSETS_THUMB, ASSETS_SHOWCASE } from '../../services/storage';
 
 interface LandingPageProps {
   onNavigate: (view: AppView, slug?: string) => void;
@@ -77,7 +77,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       slug: 'apex-fitness',
       sampleService: '1-on-1 Personal Training · 60 mins (Rs. 3,500)',
       secondaryService: 'Body Composition & Assessment · 45 mins (Rs. 2,500)',
-      image: ASSETS.fitness,
+      image: ASSETS_SHOWCASE.fitness,
     },
     {
       id: 'beauty',
@@ -90,7 +90,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       slug: 'kashmir-barbers',
       sampleService: 'Executive Haircut & Styling · 45 mins (Rs. 1,800)',
       secondaryService: 'Royal Beard Sculpting · 30 mins (Rs. 1,200)',
-      image: ASSETS.barber,
+      image: ASSETS_SHOWCASE.barber,
     },
     {
       id: 'healthcare',
@@ -103,7 +103,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       slug: 'dr-noor-dental',
       sampleService: 'Comprehensive Dental Consult · 30 mins (Rs. 2,000)',
       secondaryService: 'Ultrasonic Scaling & Polishing · 45 mins (Rs. 6,000)',
-      image: ASSETS.dental,
+      image: ASSETS_SHOWCASE.dental,
     },
     {
       id: 'education',
@@ -116,7 +116,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       slug: 'learnhub-tutors',
       sampleService: '1-on-1 Math Tuition · 60 mins (Rs. 1,000)',
       secondaryService: 'IELTS Mock Test · 90 mins (Rs. 1,500)',
-      image: ASSETS.tutor,
+      image: ASSETS_SHOWCASE.tutor,
     },
     {
       id: 'professional',
@@ -129,7 +129,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       slug: 'peshawar-legal',
       sampleService: 'Legal Consultation · 45 mins (Rs. 3,000)',
       secondaryService: 'Document Review · 30 mins (Rs. 2,000)',
-      image: ASSETS.legal,
+      image: ASSETS_SHOWCASE.legal,
     },
   ];
 
@@ -226,11 +226,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   <div className="p-5 border-b border-neutral-100 bg-neutral-50/50">
                     <div className="flex items-start gap-3.5">
                       <img 
-                        src={ASSETS.fitness} 
+                        src="/hero-thumb.webp" 
                         alt="Apex Fitness Studio logo" 
                         width={56}
                         height={56}
                         fetchPriority="high"
+                        decoding="async"
                         referrerPolicy="no-referrer"
                         className="w-14 h-14 rounded-xl object-cover border border-neutral-200 shadow-xs shrink-0" 
                       />

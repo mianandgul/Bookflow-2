@@ -3,8 +3,9 @@ import react from '@vitejs/plugin-react';
 import path from 'path';
 import {defineConfig} from 'vite';
 
-export default defineConfig(() => {
+export default defineConfig(({ mode }) => {
   return {
+    mode: 'production',
     plugins: [react(), tailwindcss()],
     resolve: {
       alias: {
@@ -15,12 +16,34 @@ export default defineConfig(() => {
       target: 'es2020',
       cssCodeSplit: true,
       chunkSizeWarningLimit: 600,
+      modulePreload: {
+        resolveDependencies: (url, deps) => {
+          // Only preload dependencies critical to the initial landing view.
+          // Filter out heavy admin/dashboard/auth/supabase chunks so mobile landing LCP/FCP stays lean.
+          return deps.filter((dep) => {
+            return !dep.includes('supabase') &&
+                   !dep.includes('Dashboard') &&
+                   !dep.includes('AuthModal') &&
+                   !dep.includes('Overview') &&
+                   !dep.includes('Bookings') &&
+                   !dep.includes('Services') &&
+                   !dep.includes('Availability') &&
+                   !dep.includes('Customers') &&
+                   !dep.includes('Settings') &&
+                   !dep.includes('BusinessProfile') &&
+                   !dep.includes('CustomerBooking');
+          });
+        },
+      },
       rollupOptions: {
         output: {
-          manualChunks: {
-            'react-vendor': ['react', 'react-dom'],
-            'supabase-vendor': ['@supabase/supabase-js'],
-            'icons': ['lucide-react'],
+          manualChunks(id) {
+            if (id.includes('node_modules/react/') || id.includes('node_modules/react-dom/') || id.includes('node_modules/scheduler/')) {
+              return 'react-vendor';
+            }
+            if (id.includes('node_modules/@supabase/')) {
+              return 'supabase-vendor';
+            }
           },
         },
       },

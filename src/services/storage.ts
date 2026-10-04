@@ -12,7 +12,6 @@ import {
 } from '../types';
 
 import { isSupabaseConfigured } from '../lib/supabase';
-import { SupabaseService } from './supabaseService';
 
 import heroImage from '../assets/images/booking_platform_hero_1790610722458.webp';
 import fitnessImage from '../assets/images/service_fitness_coach_1790610738386.webp';
@@ -20,6 +19,20 @@ import barberImage from '../assets/images/service_barber_salon_1790610749677.web
 import dentalImage from '../assets/images/service_dental_clinic_1790610765963.webp';
 import tutorImage from '../assets/images/service_tutor_education_1790692253523.webp';
 import legalImage from '../assets/images/service_legal_office_1790692264349.webp';
+
+// Lightweight thumbnail avatars (5-8 kB each instead of 80-160 kB)
+import fitnessThumb from '../assets/images/service_fitness_coach_1790610738386_thumb.webp';
+import barberThumb from '../assets/images/service_barber_salon_1790610749677_thumb.webp';
+import dentalThumb from '../assets/images/service_dental_clinic_1790610765963_thumb.webp';
+import tutorThumb from '../assets/images/service_tutor_education_1790692253523_thumb.webp';
+import legalThumb from '../assets/images/service_legal_office_1790692264349_thumb.webp';
+
+// Scaled showcase images (40-70 kB each instead of 80-160 kB)
+import fitnessShowcase from '../assets/images/service_fitness_coach_1790610738386_showcase.webp';
+import barberShowcase from '../assets/images/service_barber_salon_1790610749677_showcase.webp';
+import dentalShowcase from '../assets/images/service_dental_clinic_1790610765963_showcase.webp';
+import tutorShowcase from '../assets/images/service_tutor_education_1790692253523_showcase.webp';
+import legalShowcase from '../assets/images/service_legal_office_1790692264349_showcase.webp';
 
 // Asset references
 export const ASSETS = {
@@ -29,6 +42,22 @@ export const ASSETS = {
   dental: dentalImage,
   tutor: tutorImage,
   legal: legalImage,
+};
+
+export const ASSETS_THUMB = {
+  fitness: fitnessThumb,
+  barber: barberThumb,
+  dental: dentalThumb,
+  tutor: tutorThumb,
+  legal: legalThumb,
+};
+
+export const ASSETS_SHOWCASE = {
+  fitness: fitnessShowcase,
+  barber: barberShowcase,
+  dental: dentalShowcase,
+  tutor: tutorShowcase,
+  legal: legalShowcase,
 };
 
 export function resolveAssetUrl(url?: string): string {
@@ -717,7 +746,9 @@ export class StorageService {
     this.save(STORAGE_KEYS.AVAILABILITY, all);
 
     if (isSupabaseConfigured()) {
-      SupabaseService.saveBusinessHours(availability).catch(console.warn);
+      import('./supabaseService').then(({ SupabaseService }) => {
+        SupabaseService.saveBusinessHours(availability).catch(console.warn);
+      }).catch(console.warn);
     }
   }
 
@@ -746,7 +777,9 @@ export class StorageService {
     this.save(STORAGE_KEYS.BLOCKED_TIMES, all);
 
     if (isSupabaseConfigured()) {
-      SupabaseService.addBlockedTime(blocked).catch(console.warn);
+      import('./supabaseService').then(({ SupabaseService }) => {
+        SupabaseService.addBlockedTime(blocked).catch(console.warn);
+      }).catch(console.warn);
     }
 
     return newBlocked;
@@ -759,7 +792,9 @@ export class StorageService {
       this.save(STORAGE_KEYS.BLOCKED_TIMES, all);
     }
     if (isSupabaseConfigured()) {
-      SupabaseService.deleteBlockedTime(id).catch(console.warn);
+      import('./supabaseService').then(({ SupabaseService }) => {
+        SupabaseService.deleteBlockedTime(id).catch(console.warn);
+      }).catch(console.warn);
     }
   }
 
@@ -814,6 +849,7 @@ export class StorageService {
 
     // If Supabase is connected, persist to Supabase Postgres as source of truth
     if (isSupabaseConfigured()) {
+      const { SupabaseService } = await import('./supabaseService');
       const cloudResult = await SupabaseService.createBooking({
         businessId: data.businessId,
         serviceId: service.id,
@@ -880,7 +916,9 @@ export class StorageService {
     }
 
     if (isSupabaseConfigured()) {
-      SupabaseService.updateBookingStatus(bookingId, status).catch(console.warn);
+      import('./supabaseService').then(({ SupabaseService }) => {
+        SupabaseService.updateBookingStatus(bookingId, status).catch(console.warn);
+      }).catch(console.warn);
     }
   }
 
@@ -892,6 +930,7 @@ export class StorageService {
   static async syncWithSupabase(): Promise<boolean> {
     if (!isSupabaseConfigured()) return false;
     try {
+      const { SupabaseService } = await import('./supabaseService');
       const cloudBusinesses = await SupabaseService.getBusinesses();
       if (cloudBusinesses && cloudBusinesses.length > 0) {
         this.save(STORAGE_KEYS.BUSINESSES, cloudBusinesses);
@@ -908,6 +947,7 @@ export class StorageService {
       return { success: false, message: 'Supabase credentials are not configured yet.' };
     }
     try {
+      const { SupabaseService } = await import('./supabaseService');
       const localBiz = this.getBusinesses();
       let count = 0;
       for (const b of localBiz) {

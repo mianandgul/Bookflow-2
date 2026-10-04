@@ -14,7 +14,6 @@ import {
   BookingStatus 
 } from './types';
 import { StorageService } from './services/storage';
-import { SupabaseService } from './services/supabaseService';
 import { isSupabaseConfigured } from './lib/supabase';
 
 // Common Components
@@ -82,18 +81,31 @@ export default function App() {
     loadData();
 
     if (isSupabaseConfigured()) {
-      SupabaseService.getCurrentUser().then((cloudUser) => {
-        if (cloudUser) {
-          setCurrentUser(cloudUser);
-          StorageService.setCurrentUser(cloudUser);
-          if (cloudUser.businessId) {
-            handleSelectBusiness(cloudUser.businessId);
-          }
-        }
-      });
-      StorageService.syncWithSupabase().then(() => {
-        loadData();
-      });
+      const initSupabase = () => {
+        import('./services/supabaseService').then(({ SupabaseService }) => {
+          SupabaseService.getCurrentUser().then((cloudUser) => {
+            if (cloudUser) {
+              setCurrentUser(cloudUser);
+              StorageService.setCurrentUser(cloudUser);
+              if (cloudUser.businessId) {
+                handleSelectBusiness(cloudUser.businessId);
+              }
+            }
+          }).catch(console.warn);
+        }).catch(console.warn);
+
+        StorageService.syncWithSupabase().then(() => {
+          loadData();
+        }).catch(console.warn);
+      };
+
+      if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+        const idleId = (window as unknown as { requestIdleCallback: (cb: () => void, opts?: { timeout: number }) => number }).requestIdleCallback(initSupabase, { timeout: 2000 });
+        return () => (window as unknown as { cancelIdleCallback: (id: number) => void }).cancelIdleCallback(idleId);
+      } else {
+        const timer = setTimeout(initSupabase, 1500);
+        return () => clearTimeout(timer);
+      }
     }
 
     // Check URL pathname for deep linking and handle popstate
@@ -233,6 +245,7 @@ export default function App() {
 
   const handleLogout = async () => {
     if (isSupabaseConfigured()) {
+      const { SupabaseService } = await import('./services/supabaseService');
       await SupabaseService.signOut();
     }
     setCurrentUser(null);
