@@ -153,7 +153,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
       <div className="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl relative space-y-6">
         <button
+          type="button"
           onClick={onClose}
+          aria-label="Close authentication modal"
           className="absolute top-5 right-5 text-neutral-400 hover:text-neutral-700 p-1"
         >
           ✕
@@ -241,12 +243,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           {mode === 'signup' && (
             <>
               <div>
-                <label className="block font-semibold text-neutral-700 mb-1">
+                <label htmlFor="auth-fullname" className="block font-semibold text-neutral-700 mb-1">
                   Your Full Name
                 </label>
                 <div className="relative">
                   <UserIcon className="w-4 h-4 text-neutral-400 absolute left-3 top-2.5" />
                   <input
+                    id="auth-fullname"
                     type="text"
                     required
                     value={name}
@@ -258,12 +261,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               </div>
 
               <div>
-                <label className="block font-semibold text-neutral-700 mb-1">
+                <label htmlFor="auth-businessname" className="block font-semibold text-neutral-700 mb-1">
                   Business Name
                 </label>
                 <div className="relative">
                   <Building className="w-4 h-4 text-neutral-400 absolute left-3 top-2.5" />
                   <input
+                    id="auth-businessname"
                     type="text"
                     required
                     value={businessName}
@@ -277,12 +281,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           )}
 
           <div>
-            <label className="block font-semibold text-neutral-700 mb-1">
+            <label htmlFor="auth-email" className="block font-semibold text-neutral-700 mb-1">
               Email Address
             </label>
             <div className="relative">
               <Mail className="w-4 h-4 text-neutral-400 absolute left-3 top-2.5" />
               <input
+                id="auth-email"
                 type="email"
                 required
                 value={email}
@@ -296,7 +301,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           {mode !== 'reset' && (
             <div>
               <div className="flex justify-between items-center mb-1">
-                <label className="font-semibold text-neutral-700">
+                <label htmlFor="auth-password" className="font-semibold text-neutral-700">
                   Password
                 </label>
                 {mode === 'login' && (
@@ -316,6 +321,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               <div className="relative">
                 <Lock className="w-4 h-4 text-neutral-400 absolute left-3 top-2.5" />
                 <input
+                  id="auth-password"
                   type="password"
                   required
                   value={password}

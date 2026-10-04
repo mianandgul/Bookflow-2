@@ -145,7 +145,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   };
 
   return (
-    <div className="bg-white">
+    <main id="main-content" className="bg-white">
       {/* Hero Section */}
       <section className="relative overflow-hidden pt-12 pb-20 lg:pt-20 lg:pb-28 border-b border-neutral-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -227,13 +227,16 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                     <div className="flex items-start gap-3.5">
                       <img 
                         src={ASSETS.fitness} 
-                        alt="Apex Fitness Studio" 
+                        alt="Apex Fitness Studio logo" 
+                        width={56}
+                        height={56}
+                        fetchPriority="high"
                         referrerPolicy="no-referrer"
                         className="w-14 h-14 rounded-xl object-cover border border-neutral-200 shadow-xs shrink-0" 
                       />
                       <div className="min-w-0">
                         <div className="flex items-center gap-1.5">
-                          <h3 className="font-bold text-neutral-900 text-base truncate">Apex Performance Studio</h3>
+                          <p className="font-bold text-neutral-900 text-base truncate">Apex Performance Studio</p>
                           <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
                         </div>
                         <p className="text-xs text-neutral-500 line-clamp-1">Personal Training & Conditioning</p>
@@ -650,6 +653,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 <img
                   src={currentIndustry.image}
                   alt={currentIndustry.title}
+                  width={800}
+                  height={500}
+                  loading="lazy"
+                  decoding="async"
                   referrerPolicy="no-referrer"
                   className="w-full h-full object-cover"
                 />
@@ -813,7 +820,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                 className="bg-white rounded-2xl border border-neutral-200 overflow-hidden transition-all"
               >
                 <button
+                  type="button"
                   onClick={() => setOpenFaq(openFaq === idx ? null : idx)}
+                  aria-expanded={openFaq === idx}
+                  aria-controls={`faq-answer-${idx}`}
                   className="w-full py-4 px-6 text-left flex justify-between items-center gap-4 focus:outline-hidden"
                 >
                   <span className="text-sm font-bold text-neutral-900">
@@ -826,7 +836,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({
                   />
                 </button>
                 {openFaq === idx && (
-                  <div className="px-6 pb-4 pt-1 text-xs text-neutral-600 leading-relaxed border-t border-neutral-100 bg-neutral-50/50">
+                  <div 
+                    id={`faq-answer-${idx}`}
+                    className="px-6 pb-4 pt-1 text-xs text-neutral-600 leading-relaxed border-t border-neutral-100 bg-neutral-50/50"
+                  >
                     {faq.a}
                   </div>
                 )}
@@ -874,6 +887,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           </div>
         </div>
       </footer>
-    </div>
+    </main>
   );
 };

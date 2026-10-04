@@ -13,6 +13,7 @@ import {
   FileText
 } from 'lucide-react';
 import { Business, Booking, BookingStatus } from '../../types';
+import { StorageService } from '../../services/storage';
 
 interface BookingsViewProps {
   business: Business;
@@ -75,14 +76,13 @@ export const BookingsView: React.FC<BookingsViewProps> = ({
 
   const getWhatsAppMessageUrl = (booking: Booking) => {
     const rawNumber = booking.customerPhone;
-    const cleanNumber = rawNumber.replace(/[^\d]/g, '');
     let text = `Hi ${booking.customerName}, this is ${business.name}. Regarding your appointment for ${booking.serviceName} on ${booking.date} at ${booking.timeSlot} (Ref #${booking.bookingReference}): `;
     if (booking.status === 'confirmed') {
       text += `Your appointment is confirmed! Please let us know if you need directions to our location at ${business.address}.`;
     } else {
       text += `We have noted your booking request. We look forward to seeing you.`;
     }
-    return `https://wa.me/${cleanNumber}?text=${encodeURIComponent(text)}`;
+    return StorageService.getWhatsAppLink(rawNumber, text);
   };
 
   return (
@@ -217,15 +217,20 @@ export const BookingsView: React.FC<BookingsViewProps> = ({
                     {/* Contact & WhatsApp */}
                     <td className="py-3.5 px-4 whitespace-nowrap">
                       <div className="space-y-1">
-                        <a
-                          href={getWhatsAppMessageUrl(b)}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 font-semibold text-[11px] transition-colors"
-                        >
-                          <MessageSquare className="w-3 h-3" />
-                          <span>WhatsApp</span>
-                        </a>
+                        {getWhatsAppMessageUrl(b) ? (
+                          <a
+                            href={getWhatsAppMessageUrl(b)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            aria-label={`Chat with ${b.customerName} on WhatsApp`}
+                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 font-semibold text-[11px] transition-colors"
+                          >
+                            <MessageSquare className="w-3 h-3" />
+                            <span>WhatsApp</span>
+                          </a>
+                        ) : (
+                          <span className="text-[11px] text-neutral-400">No WhatsApp</span>
+                        )}
                         {b.customerEmail && (
                           <div className="text-[10px] text-neutral-400 truncate max-w-[140px]">
                             {b.customerEmail}

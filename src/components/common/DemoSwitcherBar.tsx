@@ -78,8 +78,10 @@ export const DemoSwitcherBar: React.FC<DemoSwitcherBarProps> = ({
           {/* Active Business Selector */}
           <div className="flex items-center gap-1.5">
             <Building2 className="w-3.5 h-3.5 text-neutral-400" />
-            <span className="text-neutral-400 hidden md:inline">Business:</span>
+            <label htmlFor="active-business-select" className="text-neutral-400 hidden md:inline">Business:</label>
             <select
+              id="active-business-select"
+              aria-label="Select active business"
               value={activeBusiness.id}
               onChange={(e) => onSelectBusiness(e.target.value)}
               className="bg-neutral-800 border border-neutral-700 text-white rounded px-2 py-0.5 text-xs focus:outline-hidden focus:ring-1 focus:ring-emerald-500"
@@ -94,8 +96,10 @@ export const DemoSwitcherBar: React.FC<DemoSwitcherBarProps> = ({
 
           {/* Reset Demo Data */}
           <button
+            type="button"
             onClick={onResetData}
             title="Reset sample bookings and services to initial state"
+            aria-label="Reset sample bookings and services to initial state"
             className="flex items-center gap-1 text-neutral-400 hover:text-neutral-200 px-2 py-1 rounded hover:bg-neutral-800 transition-colors"
           >
             <RefreshCw className="w-3 h-3" />

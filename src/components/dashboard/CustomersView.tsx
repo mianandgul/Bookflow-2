@@ -31,9 +31,8 @@ export const CustomersView: React.FC<CustomersViewProps> = ({ business }) => {
   }, [business.id, searchTerm]);
 
   const getWhatsAppMessageUrl = (phone: string, name: string) => {
-    const cleanNumber = phone.replace(/[^\d]/g, '');
     const text = `Hi ${name}, this is ${business.name}. We hope you are doing well!`;
-    return `https://wa.me/${cleanNumber}?text=${encodeURIComponent(text)}`;
+    return StorageService.getWhatsAppLink(phone, text);
   };
 
   return (
@@ -123,15 +122,20 @@ export const CustomersView: React.FC<CustomersViewProps> = ({ business }) => {
                     </td>
 
                     <td className="py-3.5 px-4 text-right whitespace-nowrap">
-                      <a
-                        href={getWhatsAppMessageUrl(c.phone, c.name)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 font-semibold text-xs transition-colors"
-                      >
-                        <MessageSquare className="w-3.5 h-3.5" />
-                        <span>WhatsApp</span>
-                      </a>
+                      {getWhatsAppMessageUrl(c.phone, c.name) ? (
+                        <a
+                          href={getWhatsAppMessageUrl(c.phone, c.name)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          aria-label={`Chat with ${c.name} on WhatsApp`}
+                          className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 font-semibold text-xs transition-colors"
+                        >
+                          <MessageSquare className="w-3.5 h-3.5" />
+                          <span>WhatsApp</span>
+                        </a>
+                      ) : (
+                        <span className="text-xs text-neutral-400">No WhatsApp</span>
+                      )}
                     </td>
                   </tr>
                 ))}

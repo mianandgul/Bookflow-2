@@ -14,12 +14,12 @@ import {
 import { isSupabaseConfigured } from '../lib/supabase';
 import { SupabaseService } from './supabaseService';
 
-import heroImage from '../assets/images/booking_platform_hero_1790610722458.jpg';
-import fitnessImage from '../assets/images/service_fitness_coach_1790610738386.jpg';
-import barberImage from '../assets/images/service_barber_salon_1790610749677.jpg';
-import dentalImage from '../assets/images/service_dental_clinic_1790610765963.jpg';
-import tutorImage from '../assets/images/service_tutor_education_1790692253523.jpg';
-import legalImage from '../assets/images/service_legal_office_1790692264349.jpg';
+import heroImage from '../assets/images/booking_platform_hero_1790610722458.webp';
+import fitnessImage from '../assets/images/service_fitness_coach_1790610738386.webp';
+import barberImage from '../assets/images/service_barber_salon_1790610749677.webp';
+import dentalImage from '../assets/images/service_dental_clinic_1790610765963.webp';
+import tutorImage from '../assets/images/service_tutor_education_1790692253523.webp';
+import legalImage from '../assets/images/service_legal_office_1790692264349.webp';
 
 // Asset references
 export const ASSETS = {
@@ -1046,7 +1046,15 @@ export class StorageService {
 
   // WhatsApp Link Helper
   static getWhatsAppLink(rawPhone: string, message: string): string {
-    const cleanNumber = rawPhone.replace(/[^\d]/g, '');
+    if (!rawPhone || typeof rawPhone !== 'string') return '';
+    let cleanNumber = rawPhone.replace(/[^\d]/g, '');
+    if (!cleanNumber || cleanNumber.length < 7) return '';
+    
+    // Normalize Pakistani mobile numbers: e.g. 03001234567 -> 923001234567
+    if (cleanNumber.startsWith('03') && cleanNumber.length === 11) {
+      cleanNumber = '92' + cleanNumber.substring(1);
+    }
+    
     const encodedText = encodeURIComponent(message);
     return `https://wa.me/${cleanNumber}?text=${encodedText}`;
   }

@@ -226,20 +226,45 @@ USING (business_id = public.get_auth_business_id());
 CREATE POLICY "Public can create bookings" 
 ON public.bookings FOR INSERT WITH CHECK (true);
 
--- Business owners can view their business's bookings
-CREATE POLICY "Owners can view business bookings" 
+-- Business owners can ONLY view their own business's bookings (strict privacy isolation)
+CREATE POLICY "Owners can view own business bookings" 
 ON public.bookings FOR SELECT TO authenticated 
 USING (business_id = public.get_auth_business_id());
 
--- Public can check booking reference or view slots (customers can check their own booking if needed)
-CREATE POLICY "Public can view own booking by reference" 
-ON public.bookings FOR SELECT 
-USING (business_id = public.get_auth_business_id() OR auth.role() = 'anon');
-
--- Business owners can update their bookings (status, notes)
-CREATE POLICY "Owners can update business bookings" 
+-- Business owners can update their own bookings (status, notes)
+CREATE POLICY "Owners can update own business bookings" 
 ON public.bookings FOR UPDATE TO authenticated 
 USING (business_id = public.get_auth_business_id());
+
+-- ----------------------------------------------------------
+-- 8. SECURE AVAILABILITY LOOKUP (NO CUSTOMER PII EXPOSED)
+-- ----------------------------------------------------------
+-- Allows public booking flow to determine booked times without exposing customer names/phones
+CREATE OR REPLACE FUNCTION public.get_occupied_slots(
+  p_business_id UUID,
+  p_booking_date DATE
+)
+RETURNS TABLE (
+  start_time TEXT,
+  end_time TEXT
+) AS $$
+  SELECT start_time, end_time
+  FROM public.bookings
+  WHERE business_id = p_business_id
+    AND booking_date = p_booking_date
+    AND status != 'cancelled';
+$$ LANGUAGE sql STABLE SECURITY DEFINER;
+
+-- Allows customer to view their own booking confirmation by reference code
+CREATE OR REPLACE FUNCTION public.get_booking_by_reference(
+  p_booking_reference TEXT
+)
+RETURNS SETOF public.bookings AS $$
+  SELECT *
+  FROM public.bookings
+  WHERE booking_reference = p_booking_reference
+  LIMIT 1;
+$$ LANGUAGE sql STABLE SECURITY DEFINER;
 
 -- ----------------------------------------------------------
 -- 8. ATOMIC DOUBLE-BOOKING CHECK FUNCTION (RPC)

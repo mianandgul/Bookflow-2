@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { 
   Business, 
   Service, 
@@ -20,23 +20,28 @@ import { isSupabaseConfigured } from './lib/supabase';
 // Common Components
 import { DemoSwitcherBar } from './components/common/DemoSwitcherBar';
 import { TopNavbar } from './components/common/TopNavbar';
-import { AuthModal } from './components/auth/AuthModal';
 
-// Landing Page
+// Landing Page (eagerly loaded for instant mobile LCP/FCP)
 import { LandingPage } from './components/landing/LandingPage';
 
-// Customer Public Booking Page
-import { CustomerBookingView } from './components/customer/CustomerBookingView';
+// Lazy-loaded routes & dashboard views
+const AuthModal = lazy(() => import('./components/auth/AuthModal').then((m) => ({ default: m.AuthModal })));
+const CustomerBookingView = lazy(() => import('./components/customer/CustomerBookingView').then((m) => ({ default: m.CustomerBookingView })));
+const DashboardLayout = lazy(() => import('./components/dashboard/DashboardLayout').then((m) => ({ default: m.DashboardLayout })));
+const OverviewView = lazy(() => import('./components/dashboard/OverviewView').then((m) => ({ default: m.OverviewView })));
+const BookingsView = lazy(() => import('./components/dashboard/BookingsView').then((m) => ({ default: m.BookingsView })));
+const ServicesView = lazy(() => import('./components/dashboard/ServicesView').then((m) => ({ default: m.ServicesView })));
+const AvailabilityView = lazy(() => import('./components/dashboard/AvailabilityView').then((m) => ({ default: m.AvailabilityView })));
+const CustomersView = lazy(() => import('./components/dashboard/CustomersView').then((m) => ({ default: m.CustomersView })));
+const BusinessProfileView = lazy(() => import('./components/dashboard/BusinessProfileView').then((m) => ({ default: m.BusinessProfileView })));
+const SettingsView = lazy(() => import('./components/dashboard/SettingsView').then((m) => ({ default: m.SettingsView })));
 
-// Dashboard Components
-import { DashboardLayout } from './components/dashboard/DashboardLayout';
-import { OverviewView } from './components/dashboard/OverviewView';
-import { BookingsView } from './components/dashboard/BookingsView';
-import { ServicesView } from './components/dashboard/ServicesView';
-import { AvailabilityView } from './components/dashboard/AvailabilityView';
-import { CustomersView } from './components/dashboard/CustomersView';
-import { BusinessProfileView } from './components/dashboard/BusinessProfileView';
-import { SettingsView } from './components/dashboard/SettingsView';
+const SuspenseFallback = () => (
+  <div className="min-h-[50vh] flex items-center justify-center p-8 text-neutral-400 text-xs">
+    <div className="w-5 h-5 border-2 border-neutral-300 border-t-neutral-900 rounded-full animate-spin mr-2"></div>
+    <span>Loading view...</span>
+  </div>
+);
 
 export default function App() {
   // Application View State
@@ -276,89 +281,97 @@ export default function App() {
       )}
 
       {currentView === 'customer_booking' && (
-        <CustomerBookingView
-          businessSlug={customerSlug}
-          onNavigate={handleNavigate}
-        />
+        <Suspense fallback={<SuspenseFallback />}>
+          <CustomerBookingView
+            businessSlug={customerSlug}
+            onNavigate={handleNavigate}
+          />
+        </Suspense>
       )}
 
       {currentView === 'dashboard' && (
-        <DashboardLayout
-          business={activeBusiness}
-          activeTab={dashboardTab}
-          onTabChange={setDashboardTab}
-          currentUser={currentUser}
-          onLogout={handleLogout}
-          onNavigate={handleNavigate}
-        >
-          {dashboardTab === 'overview' && (
-            <OverviewView
-              business={activeBusiness}
-              bookings={bookings}
-              services={services}
-              onTabChange={setDashboardTab}
-              onUpdateStatus={handleUpdateBookingStatus}
-              onNavigatePublic={() => handleNavigate('customer_booking', activeBusiness.slug)}
-            />
-          )}
+        <Suspense fallback={<SuspenseFallback />}>
+          <DashboardLayout
+            business={activeBusiness}
+            activeTab={dashboardTab}
+            onTabChange={setDashboardTab}
+            currentUser={currentUser}
+            onLogout={handleLogout}
+            onNavigate={handleNavigate}
+          >
+            {dashboardTab === 'overview' && (
+              <OverviewView
+                business={activeBusiness}
+                bookings={bookings}
+                services={services}
+                onTabChange={setDashboardTab}
+                onUpdateStatus={handleUpdateBookingStatus}
+                onNavigatePublic={() => handleNavigate('customer_booking', activeBusiness.slug)}
+              />
+            )}
 
-          {dashboardTab === 'bookings' && (
-            <BookingsView
-              business={activeBusiness}
-              bookings={bookings}
-              onUpdateStatus={handleUpdateBookingStatus}
-            />
-          )}
+            {dashboardTab === 'bookings' && (
+              <BookingsView
+                business={activeBusiness}
+                bookings={bookings}
+                onUpdateStatus={handleUpdateBookingStatus}
+              />
+            )}
 
-          {dashboardTab === 'services' && (
-            <ServicesView
-              business={activeBusiness}
-              services={services}
-              onAddService={handleAddService}
-              onUpdateService={handleUpdateService}
-              onDeleteService={handleDeleteService}
-            />
-          )}
+            {dashboardTab === 'services' && (
+              <ServicesView
+                business={activeBusiness}
+                services={services}
+                onAddService={handleAddService}
+                onUpdateService={handleUpdateService}
+                onDeleteService={handleDeleteService}
+              />
+            )}
 
-          {dashboardTab === 'availability' && (
-            <AvailabilityView
-              business={activeBusiness}
-              onAvailabilityUpdated={() => {
-                // Re-sync bookings or slots if needed
-              }}
-            />
-          )}
+            {dashboardTab === 'availability' && (
+              <AvailabilityView
+                business={activeBusiness}
+                onAvailabilityUpdated={() => {
+                  // Re-sync bookings or slots if needed
+                }}
+              />
+            )}
 
-          {dashboardTab === 'customers' && (
-            <CustomersView business={activeBusiness} />
-          )}
+            {dashboardTab === 'customers' && (
+              <CustomersView business={activeBusiness} />
+            )}
 
-          {dashboardTab === 'profile' && (
-            <BusinessProfileView
-              business={activeBusiness}
-              onUpdateBusiness={handleUpdateBusiness}
-              onNavigatePublic={() => handleNavigate('customer_booking', activeBusiness.slug)}
-            />
-          )}
+            {dashboardTab === 'profile' && (
+              <BusinessProfileView
+                business={activeBusiness}
+                onUpdateBusiness={handleUpdateBusiness}
+                onNavigatePublic={() => handleNavigate('customer_booking', activeBusiness.slug)}
+              />
+            )}
 
-          {dashboardTab === 'settings' && (
-            <SettingsView
-              business={activeBusiness}
-              bookings={bookings}
-              onResetData={handleResetData}
-            />
-          )}
-        </DashboardLayout>
+            {dashboardTab === 'settings' && (
+              <SettingsView
+                business={activeBusiness}
+                bookings={bookings}
+                onResetData={handleResetData}
+              />
+            )}
+          </DashboardLayout>
+        </Suspense>
       )}
 
       {/* Auth Modal */}
-      <AuthModal
-        isOpen={authModalOpen}
-        onClose={() => setAuthModalOpen(false)}
-        initialMode={authMode}
-        businesses={businesses}
-        onLoginSuccess={handleLoginSuccess}
-      />
+      {authModalOpen && (
+        <Suspense fallback={null}>
+          <AuthModal
+            isOpen={authModalOpen}
+            onClose={() => setAuthModalOpen(false)}
+            initialMode={authMode}
+            businesses={businesses}
+            onLoginSuccess={handleLoginSuccess}
+          />
+        </Suspense>
+      )}
     </div>
   );
 }

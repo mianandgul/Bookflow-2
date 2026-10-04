@@ -139,7 +139,9 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
             <div className="flex items-center gap-3">
               <img
                 src={business.coverUrl || business.logoUrl}
-                alt={business.name}
+                alt={`${business.name} logo`}
+                width={40}
+                height={40}
                 referrerPolicy="no-referrer"
                 className="w-10 h-10 rounded-xl object-cover border border-neutral-200 shrink-0"
               />
@@ -185,7 +187,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
           </div>
 
           {/* Navigation Links */}
-          <nav className="space-y-1">
+          <nav aria-label="Dashboard Navigation" className="space-y-1">
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = activeTab === item.tab;
@@ -218,8 +220,10 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
             </div>
           </div>
           <button
+            type="button"
             onClick={onLogout}
             title="Sign out"
+            aria-label="Sign out of dashboard"
             className="p-1.5 rounded-lg text-neutral-400 hover:text-red-600 hover:bg-neutral-50 transition-colors"
           >
             <LogOut className="w-4 h-4" />

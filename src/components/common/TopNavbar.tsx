@@ -19,9 +19,11 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
     <header className="sticky top-7 z-40 bg-white/95 backdrop-blur-md border-b border-neutral-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         {/* Zone 1: Single text element wordmark */}
-        <div 
+        <button 
+          type="button"
           onClick={() => onNavigate('landing')}
-          className="flex items-center gap-2.5 cursor-pointer group"
+          aria-label="BookFlow Homepage"
+          className="flex items-center gap-2.5 cursor-pointer group text-left border-none bg-transparent p-0"
         >
           <div className="w-8 h-8 rounded-lg bg-neutral-900 text-white flex items-center justify-center font-bold text-base shadow-xs group-hover:bg-neutral-800 transition-colors">
             <Calendar className="w-4 h-4 text-emerald-400" />
@@ -29,10 +31,10 @@ export const TopNavbar: React.FC<TopNavbarProps> = ({
           <span className="text-xl font-bold tracking-tight text-neutral-950 font-sans">
             BookFlow
           </span>
-        </div>
+        </button>
 
         {/* Zone 2: Clean text navigation links */}
-        <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-neutral-600">
+        <nav aria-label="Main Navigation" className="hidden md:flex items-center gap-8 text-sm font-medium text-neutral-600">
           <a href="#problem" className="hover:text-neutral-950 transition-colors">
             The Problem
           </a>

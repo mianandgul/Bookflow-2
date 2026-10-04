@@ -85,14 +85,13 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
 
   const getWhatsAppMessageUrl = (booking: Booking) => {
     const rawNumber = booking.customerPhone;
-    const cleanNumber = rawNumber.replace(/[^\d]/g, '');
     let text = `Hi ${booking.customerName}, regarding your booking #${booking.bookingReference} for ${booking.serviceName} on ${booking.date} at ${booking.timeSlot} at ${business.name}: `;
     if (booking.status === 'confirmed') {
       text += `Your appointment is confirmed! We look forward to seeing you.`;
     } else {
       text += `We have received your booking and are confirming details.`;
     }
-    return `https://wa.me/${cleanNumber}?text=${encodeURIComponent(text)}`;
+    return StorageService.getWhatsAppLink(rawNumber, text);
   };
 
   return (
@@ -298,16 +297,21 @@ export const OverviewView: React.FC<OverviewViewProps> = ({
                     </td>
 
                     <td className="py-3 px-4 whitespace-nowrap">
-                      <a
-                        href={getWhatsAppMessageUrl(b)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 font-semibold text-[11px] transition-colors"
-                        title="Chat with customer on WhatsApp"
-                      >
-                        <MessageSquare className="w-3 h-3" />
-                        <span>WhatsApp</span>
-                      </a>
+                      {getWhatsAppMessageUrl(b) ? (
+                        <a
+                          href={getWhatsAppMessageUrl(b)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          aria-label={`Chat with ${b.customerName} on WhatsApp`}
+                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 font-semibold text-[11px] transition-colors"
+                          title="Chat with customer on WhatsApp"
+                        >
+                          <MessageSquare className="w-3 h-3" />
+                          <span>WhatsApp</span>
+                        </a>
+                      ) : (
+                        <span className="text-[11px] text-neutral-400">No WhatsApp</span>
+                      )}
                     </td>
 
                     <td className="py-3 px-4 text-right whitespace-nowrap">

@@ -165,6 +165,10 @@ export const ServicesView: React.FC<ServicesViewProps> = ({
                   <img
                     src={srv.imageUrl || business.coverUrl}
                     alt={srv.name}
+                    width={360}
+                    height={144}
+                    loading="lazy"
+                    decoding="async"
                     referrerPolicy="no-referrer"
                     className="w-full h-full object-cover"
                   />
@@ -351,12 +355,13 @@ export const ServicesView: React.FC<ServicesViewProps> = ({
                     <button
                       key={idx}
                       type="button"
+                      aria-label={`Select preset image ${p.label}`}
                       onClick={() => setImageUrl(p.url)}
                       className={`h-16 rounded-xl overflow-hidden border-2 relative transition-all ${
                         imageUrl === p.url ? 'border-neutral-950 ring-2 ring-neutral-950/20' : 'border-neutral-200'
                       }`}
                     >
-                      <img src={p.url} alt={p.label} className="w-full h-full object-cover" />
+                      <img src={p.url} alt={p.label} width={80} height={64} loading="lazy" decoding="async" className="w-full h-full object-cover" />
                       <span className="absolute bottom-0 inset-x-0 bg-neutral-950/80 text-[10px] text-white py-0.5 text-center">
                         {p.label}
                       </span>

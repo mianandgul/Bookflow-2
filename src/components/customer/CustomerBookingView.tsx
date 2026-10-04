@@ -210,22 +210,21 @@ export const CustomerBookingView: React.FC<CustomerBookingViewProps> = ({
   // WhatsApp Pre-filled message generator
   const getCustomerWhatsAppUrl = (booking: Booking) => {
     const rawNumber = business.whatsappNumber || business.phone;
-    const cleanNumber = rawNumber.replace(/[^\d]/g, '');
     const text = `Hi ${business.name}, I would like to book ${booking.serviceName} on ${booking.date} at ${booking.timeSlot}. My booking reference is #${booking.bookingReference}. (Customer: ${booking.customerName})`;
-    return `https://wa.me/${cleanNumber}?text=${encodeURIComponent(text)}`;
+    return StorageService.getWhatsAppLink(rawNumber, text);
   };
 
   const getDirectChatUrl = () => {
     const rawNumber = business.whatsappNumber || business.phone;
-    const cleanNumber = rawNumber.replace(/[^\d]/g, '');
     const text = `Hi ${business.name}, I found your booking page on BookFlow and have an inquiry.`;
-    return `https://wa.me/${cleanNumber}?text=${encodeURIComponent(text)}`;
+    return StorageService.getWhatsAppLink(rawNumber, text);
   };
 
   // CONFIRMATION SCREEN
   if (bookingConfirmed) {
+    const confirmWaUrl = getCustomerWhatsAppUrl(bookingConfirmed);
     return (
-      <div className="min-h-screen bg-neutral-50 py-12 px-4 sm:px-6 lg:px-8">
+      <main id="main-content" className="min-h-screen bg-neutral-50 py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-xl mx-auto bg-white rounded-3xl border border-neutral-200 shadow-sm p-6 sm:p-10">
           <div className="w-16 h-16 bg-emerald-50 rounded-2xl flex items-center justify-center text-emerald-600 mx-auto mb-6">
             <CheckCircle2 className="w-10 h-10" />
@@ -292,17 +291,21 @@ export const CustomerBookingView: React.FC<CustomerBookingViewProps> = ({
 
           {/* Action CTAs */}
           <div className="space-y-3">
-            <a
-              href={getCustomerWhatsAppUrl(bookingConfirmed)}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="w-full py-3.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold transition-colors flex items-center justify-center gap-2 shadow-xs"
-            >
-              <MessageSquare className="w-4 h-4" />
-              <span>Contact on WhatsApp with Booking Details</span>
-            </a>
+            {confirmWaUrl ? (
+              <a
+                href={confirmWaUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Contact on WhatsApp with Booking Details"
+                className="w-full py-3.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold transition-colors flex items-center justify-center gap-2 shadow-xs"
+              >
+                <MessageSquare className="w-4 h-4" />
+                <span>Contact on WhatsApp with Booking Details</span>
+              </a>
+            ) : null}
 
             <button
+              type="button"
               onClick={() => {
                 setBookingConfirmed(null);
                 setSelectedTimeSlot('');
@@ -317,12 +320,14 @@ export const CustomerBookingView: React.FC<CustomerBookingViewProps> = ({
             The business owner will confirm your appointment. You can contact them anytime via WhatsApp.
           </p>
         </div>
-      </div>
+      </main>
     );
   }
 
+  const directChatUrl = getDirectChatUrl();
+
   return (
-    <div className="min-h-screen bg-neutral-50 pb-20">
+    <main id="main-content" className="min-h-screen bg-neutral-50 pb-20">
       {/* Business Public Header */}
       <div className="bg-white border-b border-neutral-200">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -330,7 +335,10 @@ export const CustomerBookingView: React.FC<CustomerBookingViewProps> = ({
             <div className="flex items-start sm:items-center gap-4">
               <img
                 src={business.coverUrl || business.logoUrl}
-                alt={business.name}
+                alt={`${business.name} logo`}
+                width={80}
+                height={80}
+                fetchPriority="high"
                 referrerPolicy="no-referrer"
                 className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl object-cover border border-neutral-200 shadow-xs shrink-0"
               />
@@ -359,17 +367,20 @@ export const CustomerBookingView: React.FC<CustomerBookingViewProps> = ({
             </div>
 
             {/* Direct WhatsApp Contact Button */}
-            <div className="shrink-0 flex items-center gap-2">
-              <a
-                href={getDirectChatUrl()}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-xl transition-colors flex items-center gap-2 shadow-xs"
-              >
-                <MessageSquare className="w-4 h-4" />
-                <span>Chat on WhatsApp</span>
-              </a>
-            </div>
+            {directChatUrl ? (
+              <div className="shrink-0 flex items-center gap-2">
+                <a
+                  href={directChatUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={`Chat with ${business.name} on WhatsApp`}
+                  className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-xl transition-colors flex items-center gap-2 shadow-xs"
+                >
+                  <MessageSquare className="w-4 h-4" />
+                  <span>Chat on WhatsApp</span>
+                </a>
+              </div>
+            ) : null}
           </div>
         </div>
       </div>
@@ -470,6 +481,7 @@ export const CustomerBookingView: React.FC<CustomerBookingViewProps> = ({
                 <div className="flex items-center gap-1.5">
                   <button
                     type="button"
+                    aria-label="Previous month"
                     disabled={calendarMonthOffset <= 0}
                     onClick={() => setCalendarMonthOffset((prev) => Math.max(0, prev - 1))}
                     className="p-1.5 rounded-lg border border-neutral-200 hover:bg-neutral-100 disabled:opacity-30 disabled:pointer-events-none text-neutral-700"
@@ -481,6 +493,7 @@ export const CustomerBookingView: React.FC<CustomerBookingViewProps> = ({
                   </span>
                   <button
                     type="button"
+                    aria-label="Next month"
                     disabled={calendarMonthOffset >= 2}
                     onClick={() => setCalendarMonthOffset((prev) => prev + 1)}
                     className="p-1.5 rounded-lg border border-neutral-200 hover:bg-neutral-100 disabled:opacity-30 disabled:pointer-events-none text-neutral-700"
@@ -515,6 +528,7 @@ export const CustomerBookingView: React.FC<CustomerBookingViewProps> = ({
                     <button
                       type="button"
                       key={day.dateStr}
+                      aria-label={`Select date ${day.dateStr}`}
                       disabled={day.isPast}
                       onClick={() => {
                         setSelectedDate(day.dateStr);
@@ -577,6 +591,7 @@ export const CustomerBookingView: React.FC<CustomerBookingViewProps> = ({
                       <button
                         type="button"
                         key={slot}
+                        aria-label={`Select time slot ${slot}`}
                         onClick={() => setSelectedTimeSlot(slot)}
                         className={`py-2 px-3 rounded-xl text-xs font-mono font-medium transition-all text-center border ${
                           isSelected
@@ -613,10 +628,11 @@ export const CustomerBookingView: React.FC<CustomerBookingViewProps> = ({
 
               <div className="space-y-4">
                 <div>
-                  <label className="block text-xs font-semibold text-neutral-700 mb-1">
+                  <label htmlFor="cust-full-name" className="block text-xs font-semibold text-neutral-700 mb-1">
                     Full Name <span className="text-red-500">*</span>
                   </label>
                   <input
+                    id="cust-full-name"
                     type="text"
                     required
                     value={customerName}
@@ -627,10 +643,11 @@ export const CustomerBookingView: React.FC<CustomerBookingViewProps> = ({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-neutral-700 mb-1">
+                  <label htmlFor="cust-phone-number" className="block text-xs font-semibold text-neutral-700 mb-1">
                     WhatsApp or Mobile Number <span className="text-red-500">*</span>
                   </label>
                   <input
+                    id="cust-phone-number"
                     type="tel"
                     required
                     value={customerPhone}
@@ -644,10 +661,11 @@ export const CustomerBookingView: React.FC<CustomerBookingViewProps> = ({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-neutral-700 mb-1">
+                  <label htmlFor="cust-email-address" className="block text-xs font-semibold text-neutral-700 mb-1">
                     Email Address <span className="text-neutral-400 font-normal">(Optional)</span>
                   </label>
                   <input
+                    id="cust-email-address"
                     type="email"
                     value={customerEmail}
                     onChange={(e) => setCustomerEmail(e.target.value)}
@@ -657,10 +675,11 @@ export const CustomerBookingView: React.FC<CustomerBookingViewProps> = ({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-neutral-700 mb-1">
+                  <label htmlFor="cust-notes-request" className="block text-xs font-semibold text-neutral-700 mb-1">
                     Notes or Specific Requests <span className="text-neutral-400 font-normal">(Optional)</span>
                   </label>
                   <textarea
+                    id="cust-notes-request"
                     rows={2}
                     value={customerMessage}
                     onChange={(e) => setCustomerMessage(e.target.value)}
@@ -720,6 +739,6 @@ export const CustomerBookingView: React.FC<CustomerBookingViewProps> = ({
 
         </form>
       </div>
-    </div>
+    </main>
   );
 };
